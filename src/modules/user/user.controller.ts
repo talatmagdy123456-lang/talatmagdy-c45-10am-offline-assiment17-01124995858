@@ -7,7 +7,8 @@ import {
   resetPasswordService,
 } from "./user.service.js";
 
-// Register
+// ================= Register =================
+
 export const register = async (req: Request, res: Response) => {
   try {
     const user = await registerService(req.body);
@@ -23,15 +24,13 @@ export const register = async (req: Request, res: Response) => {
   }
 };
 
-// Login
+// ================= Login =================
+
 export const login = async (req: Request, res: Response) => {
   try {
-    const token = await loginService(req.body);
+    const result = await loginService(req.body);
 
-    res.json({
-      message: "Login Success",
-      token,
-    });
+    res.status(200).json(result);
   } catch (error) {
     res.status(400).json({
       message: error instanceof Error ? error.message : "Error",
@@ -39,16 +38,23 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
-// Confirm Email
+// ================= Confirm Email =================
+
 export const confirmEmail = async (
   req: Request,
   res: Response
 ) => {
   try {
-await confirmEmailService(req.params.token as string);
-    res.json({
-      message: "Email Confirmed Successfully",
-    });
+    const token = req.params.token as string;
+
+    if (!token) {
+      return res.status(400).json({
+        message: "Token is required",
+      });
+    }
+
+    const result = await confirmEmailService(token);
+    res.status(200).json(result);
   } catch (error) {
     res.status(400).json({
       message: error instanceof Error ? error.message : "Error",
@@ -56,17 +62,16 @@ await confirmEmailService(req.params.token as string);
   }
 };
 
-// Forget Password
+// ================= Forget Password =================
+
 export const forgetPassword = async (
   req: Request,
   res: Response
 ) => {
   try {
-    await forgetPasswordService(req.body.email);
+    const result = await forgetPasswordService(req.body.email);
 
-    res.json({
-      message: "Reset Link Sent Successfully",
-    });
+    res.status(200).json(result);
   } catch (error) {
     res.status(400).json({
       message: error instanceof Error ? error.message : "Error",
@@ -74,20 +79,27 @@ export const forgetPassword = async (
   }
 };
 
-// Reset Password
+// ================= Reset Password =================
+
 export const resetPassword = async (
   req: Request,
   res: Response
 ) => {
   try {
-    await resetPasswordService(
-  req.params.token as string,
-  req.body.password
-);
+    const token = req.params.token as string;
 
-    res.json({
-      message: "Password Updated Successfully",
-    });
+    if (!token) {
+      return res.status(400).json({
+        message: "Token is required",
+      });
+    }
+
+    const result = await resetPasswordService(
+      token,
+      req.body.password
+    );
+
+    res.status(200).json(result);
   } catch (error) {
     res.status(400).json({
       message: error instanceof Error ? error.message : "Error",

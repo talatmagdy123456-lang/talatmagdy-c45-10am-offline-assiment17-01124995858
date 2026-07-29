@@ -3,6 +3,12 @@ import jwt from "jsonwebtoken";
 
 import User from "./user.model.js";
 import sendEmail from "../../utils/sendEmail.js";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../../utils/token.service.js";
+
+// ================= Register =================
 
 export const registerService = async (data: any) => {
   const isExist = await User.findOne({
@@ -18,6 +24,8 @@ export const registerService = async (data: any) => {
   const user = await User.create({
     ...data,
     password: hashPassword,
+    provider: "system",
+    confirmEmail: false,
   });
 
   const token = jwt.sign(
@@ -41,6 +49,8 @@ export const registerService = async (data: any) => {
   return user;
 };
 
+// ================= Login =================
+
 export const loginService = async (data: any) => {
   const user = await User.findOne({
     email: data.email,
@@ -52,25 +62,35 @@ export const loginService = async (data: any) => {
 
   const match = await bcrypt.compare(
     data.password,
-    user.password
+    user.password as string
   );
 
   if (!match) {
     throw new Error("Invalid Password");
   }
 
-  const token = jwt.sign(
-    {
-      id: user._id,
-    },
-    process.env.JWT_SECRET as string,
-    {
-      expiresIn: "7d",
-    }
-  );
+  if (!user.confirmEmail) {
+    throw new Error("Please Confirm Your Email");
+  }
 
-  return token;
+  const accessToken = generateAccessToken({
+    _id: user._id.toString(),
+    email: user.email,
+  });
+
+  const refreshToken = generateRefreshToken({
+    _id: user._id.toString(),
+    email: user.email,
+  });
+
+  return {
+    message: "Login Successfully",
+    accessToken,
+    refreshToken,
+  };
 };
+
+// ================= Confirm Email =================
 
 export const confirmEmailService = async (token: string) => {
   const decoded = jwt.verify(
@@ -81,7 +101,13 @@ export const confirmEmailService = async (token: string) => {
   await User.findByIdAndUpdate(decoded.id, {
     confirmEmail: true,
   });
+
+  return {
+    message: "Email Confirmed Successfully",
+  };
 };
+
+// ================= Forget Password =================
 
 export const forgetPasswordService = async (email: string) => {
   const user = await User.findOne({ email });
@@ -107,7 +133,13 @@ export const forgetPasswordService = async (email: string) => {
       Reset Password
     </a>`
   );
+
+  return {
+    message: "Reset Password Email Sent",
+  };
 };
+
+// ================= Reset Password =================
 
 export const resetPasswordService = async (
   token: string,
@@ -122,5 +154,10 @@ export const resetPasswordService = async (
 
   await User.findByIdAndUpdate(decoded.id, {
     password: hashPassword,
+    changeCredentialTime: new Date(),
   });
+
+  return {
+    message: "Password Reset Successfully",
+  };
 };

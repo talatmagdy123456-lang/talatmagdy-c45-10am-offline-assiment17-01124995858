@@ -8,6 +8,11 @@ import {
   resetPassword,
 } from "./user.controller.js";
 
+import {
+  googleLogin,
+  googleCallback,
+} from "./google.controller.js";
+
 import validation from "../../middleware/validation.middleware.js";
 
 import {
@@ -19,6 +24,7 @@ import {
 
 const router = Router();
 
+// Authentication
 router.post(
   "/register",
   validation(registerSchema),
@@ -31,7 +37,10 @@ router.post(
   login
 );
 
-router.get("/confirm/:token", confirmEmail);
+router.get(
+  "/confirm/:token",
+  confirmEmail
+);
 
 router.post(
   "/forget-password",
@@ -43,6 +52,17 @@ router.patch(
   "/reset-password/:token",
   validation(resetPasswordSchema),
   resetPassword
+);
+
+// Google Login
+router.get(
+  "/google",
+  googleLogin
+);
+
+router.get(
+  "/google/callback",
+  googleCallback
 );
 
 export default router;

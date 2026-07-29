@@ -1,33 +1,28 @@
-import type { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import { NextFunction, Request, Response } from "express";
+import User from "../modules/user/user.model.js";
+import { verifyAccessToken } from "../utils/token.service.js";
 
-const auth = (
-  req: Request,
-  res: Response,
-  next: NextFunction
+export interface AuthRequest extends Request {
+  user?: any;
+}
+
+export const authentication = async (
+ req: Request,
+ res: Response,
+ next: NextFunction
 ) => {
-  try {
-    const token = req.headers.authorization;
 
-    if (!token) {
-      return res.status(401).json({
-        message: "Token Required",
-      });
-    }
+ const token = req.headers.authorization?.split(" ")[1];
 
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET as string
-    );
+ if(!token){
+   return res.status(401).json({
+     message:"Token required"
+   });
+ }
 
-    (req as any).user = decoded;
+ const decoded:any = verifyAccessToken(token);
 
-    next();
-  } catch (error) {
-    return res.status(401).json({
-      message: "Invalid Token",
-    });
-  }
+ req.user = decoded;
+
+ next();
 };
-
-export default auth;

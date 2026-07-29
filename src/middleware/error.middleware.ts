@@ -1,17 +1,16 @@
-import { NextFunction, Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 
-const globalError = (
-  error: any,
+
+export const errorHandler = (
+  err: any,
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
 
-  return res.status(500).json({
+  res.status(err.status || 500).json({
     success: false,
-    message: error.message || "Internal Server Error",
+    message: err.message || "Internal Server Error"
   });
 
 };
-
-export default globalError;
