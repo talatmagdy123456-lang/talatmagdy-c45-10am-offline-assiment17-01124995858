@@ -1,6 +1,7 @@
-import { NextFunction, Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 export interface AuthRequest extends Request {
     user?: any;
 }
-export declare const authentication: (req: Request, res: Response, next: NextFunction) => Promise<Response<any, Record<string, any>> | undefined>;
+export declare const authentication: (req: AuthRequest, res: Response, next: NextFunction) => void;
+export default authentication;
 //# sourceMappingURL=auth.middleware.d.ts.map

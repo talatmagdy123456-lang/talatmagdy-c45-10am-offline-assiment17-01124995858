@@ -1,131 +1,60 @@
-import { Schema, model, Types } from "mongoose";
+import { Schema, model, Document, Types } from "mongoose";
+
+export enum ReactionType {
+  LIKE = "LIKE",
+  LOVE = "LOVE",
+  HAHA = "HAHA",
+  WOW = "WOW",
+  SAD = "SAD",
+  ANGRY = "ANGRY"
+}
 
 export interface IReaction {
   user: Types.ObjectId;
-  emoji: "like" | "love" | "haha" | "wow" | "sad" | "angry";
+  type: ReactionType;
 }
 
-export interface IPost {
+export interface ICommentItem {
+  user: Types.ObjectId;
   content: string;
+  createdAt?: Date;
+}
+
+export interface IPost extends Document {
+  content?: string;
   image?: string;
-  createdBy: Types.ObjectId;
+  author: Types.ObjectId;
+  likes: Types.ObjectId[];
   reactions: IReaction[];
+  comments: ICommentItem[];
+  commentsCount: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const postSchema = new Schema<IPost>(
   {
-    content: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    image: {
-      type: String,
-      default: "",
-    },
-
-    createdBy: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-
+    content: { type: String, required: false },
+    image: { type: String, required: false },
+    author: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    likes: [{ type: Schema.Types.ObjectId, ref: "User" }],
     reactions: [
       {
-        user: {
-          type: Schema.Types.ObjectId,
-          ref: "User",
-          required: true,
-        },
-
-        emoji: {
-          type: String,
-          enum: [
-            "like",
-            "love",
-            "haha",
-            "wow",
-            "sad",
-            "angry",
-          ],
-          default: "like",
-        },
-      },
+        user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+        type: { type: String, enum: Object.values(ReactionType), required: true }
+      }
     ],
+    comments: [
+      {
+        user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+        content: { type: String, required: true },
+        createdAt: { type: Date, default: Date.now }
+      }
+    ],
+    commentsCount: { type: Number, default: 0 }
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-
-// ================= Document Middleware =================
-
-postSchema.pre("validate", function () {
-  console.log("Before Validate Post");
-});
-
-
-postSchema.post("validate", function () {
-  console.log("After Validate Post");
-});
-
-
-postSchema.pre("save", function () {
-  console.log("Before Save Post");
-});
-
-
-postSchema.post("save", function () {
-  console.log("After Save Post");
-});
-
-
-// ================= Query Middleware =================
-
-postSchema.pre("find", function () {
-  this.populate("createdBy", "userName email");
-});
-
-
-postSchema.pre("findOne", function () {
-  this.populate("createdBy", "userName email");
-});
-
-
-postSchema.pre("findOneAndUpdate", function () {
-  console.log("Before Update Post");
-});
-
-
-postSchema.post("findOneAndUpdate", function () {
-  console.log("After Update Post");
-});
-
-
-postSchema.pre("findOneAndDelete", function () {
-  console.log("Before Delete Post");
-});
-
-
-postSchema.post("findOneAndDelete", function () {
-  console.log("After Delete Post");
-});
-
-
-// ================= Model Middleware =================
-
-postSchema.pre("insertMany", function () {
-  console.log("Before Insert Many");
-});
-
-
-postSchema.post("insertMany", function () {
-  console.log("After Insert Many");
-});
-
-
-const Post = model<IPost>("Post", postSchema);
-
-export default Post;
+export const PostModel = model<IPost>("Post", postSchema);
+export default PostModel;

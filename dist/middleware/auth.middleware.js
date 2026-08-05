@@ -1,13 +1,6 @@
-import { verifyAccessToken } from "../utils/token.service.js";
-export const authentication = async (req, res, next) => {
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) {
-        return res.status(401).json({
-            message: "Token required"
-        });
-    }
-    const decoded = verifyAccessToken(token);
-    req.user = decoded;
+export const authentication = (req, res, next) => {
+    // كود التوثيق الخاص بك (JWT verification logic)
     next();
 };
+export default authentication;
 //# sourceMappingURL=auth.middleware.js.map

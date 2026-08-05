@@ -1,28 +1,20 @@
-import { Schema, model, } from "mongoose";
+import { Schema, model } from "mongoose";
 const commentSchema = new Schema({
-    content: {
-        type: String,
-        required: true,
-        trim: true,
-    },
-    createdBy: {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-    },
-    postId: {
-        type: Schema.Types.ObjectId,
-        ref: "Post",
-        required: true,
-    },
+    postId: { type: Schema.Types.ObjectId, ref: "Post", required: true },
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    text: { type: String, required: true, trim: true },
+    parentCommentId: { type: Schema.Types.ObjectId, ref: "Comment", default: null },
+    likes: [{ type: Schema.Types.ObjectId, ref: "User" }],
 }, {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
 });
-// استخدام Regex عشان يغطي find و findOne مع بعض ومن غير مشاكل في الـ Types
-commentSchema.pre(/^find/, function (next) {
-    this.populate("createdBy", "userName email");
-    next();
+// Virtual Populate لجلب الـ Replies للتعليق الحالي
+commentSchema.virtual("replies", {
+    ref: "Comment",
+    localField: "_id",
+    foreignField: "parentCommentId",
 });
-const Comment = model("Comment", commentSchema);
-export default Comment;
+export const Comment = model("Comment", commentSchema);
 //# sourceMappingURL=comment.model.js.map

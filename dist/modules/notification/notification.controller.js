@@ -1,66 +1,54 @@
-import { createNotificationService, getNotificationsService, markAsReadService, deleteNotificationService, } from "./notification.service.js";
-export const createNotification = async (req, res) => {
+import { NotificationModel } from "./notification.model.js";
+// Admin Only: Create & Push Notification
+export const createAdminNotification = async (req, res) => {
     try {
-        const notification = await createNotificationService(req.body);
-        res.status(201).json(notification);
-    }
-    catch (error) {
-        res.status(400).json({
-            message: error instanceof Error
-                ? error.message
-                : "Error",
+        const { title, body, recipientId } = req.body;
+        const notification = await NotificationModel.create({
+            title,
+            body,
+            recipient: recipientId || null,
+            createdByAdmin: true
         });
+        // FCM Send Integration placeholder
+        // await firebaseAdmin.messaging().sendToDevice(...)
+        return res.status(201).json({ success: true, notification });
+    }
+    catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
     }
 };
-export const getNotifications = async (req, res) => {
+// Get User Notifications
+export const getUserNotifications = async (req, res) => {
     try {
-        const notifications = await getNotificationsService(req.user._id.toString());
-        res.json(notifications);
+        const notifications = await NotificationModel.find({
+            $or: [{ recipient: req.user._id }, { recipient: null }]
+        }).sort({ createdAt: -1 });
+        return res.status(200).json({ success: true, notifications });
     }
-    catch (error) {
-        res.status(400).json({
-            message: error instanceof Error
-                ? error.message
-                : "Error",
-        });
+    catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
     }
 };
+// Mark as Read
 export const markAsRead = async (req, res) => {
     try {
-        const id = req.params.id;
-        if (!id) {
-            return res.status(400).json({
-                message: "Notification ID is required",
-            });
-        }
-        const notification = await markAsReadService(id, req.user._id.toString());
-        res.json(notification);
+        const { id } = req.params;
+        const notification = await NotificationModel.findByIdAndUpdate(id, { isRead: true }, { new: true });
+        return res.status(200).json({ success: true, notification });
     }
-    catch (error) {
-        res.status(400).json({
-            message: error instanceof Error
-                ? error.message
-                : "Error",
-        });
+    catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
     }
 };
+// Delete Notification (Admin)
 export const deleteNotification = async (req, res) => {
     try {
-        const id = req.params.id;
-        if (!id) {
-            return res.status(400).json({
-                message: "Notification ID is required",
-            });
-        }
-        const result = await deleteNotificationService(id, req.user._id.toString());
-        res.json(result);
+        const { id } = req.params;
+        await NotificationModel.findByIdAndDelete(id);
+        return res.status(200).json({ success: true, message: "Notification deleted" });
     }
-    catch (error) {
-        res.status(400).json({
-            message: error instanceof Error
-                ? error.message
-                : "Error",
-        });
+    catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
     }
 };
 //# sourceMappingURL=notification.controller.js.map

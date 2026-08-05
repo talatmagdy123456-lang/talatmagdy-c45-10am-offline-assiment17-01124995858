@@ -1,1 +1,0 @@
-{"version":3,"file":"comment.model.d.ts","sourceRoot":"","sources":["comment.model.ts"],"names":[],"mappings":"AAAA,OAAO,EAGL,KAAK,EAEN,MAAM,UAAU,CAAC;AAElB,MAAM,WAAW,QAAQ;IACvB,OAAO,EAAE,MAAM,CAAC;IAChB,SAAS,EAAE,KAAK,CAAC,QAAQ,CAAC;IAC1B,MAAM,EAAE,KAAK,CAAC,QAAQ,CAAC;CACxB;AAmCD,QAAA,MAAM,OAAO;;;;;;iBAA4C,CAAC;AAE1D,eAAe,OAAO,CAAC"}

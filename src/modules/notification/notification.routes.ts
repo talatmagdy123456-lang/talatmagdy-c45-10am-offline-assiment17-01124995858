@@ -1,44 +1,20 @@
 import { Router } from "express";
-
 import {
-  createNotification,
-  getNotifications,
+  createAdminNotification,
+  getUserNotifications,
   markAsRead,
   deleteNotification,
 } from "./notification.controller.js";
-
 import { authentication } from "../../middleware/auth.middleware.js";
-import validation from "../../middleware/validation.middleware.js";
-
-import {
-  createNotificationSchema,
-} from "./notification.validation.js";
 
 const router = Router();
+router.use(authentication);
 
-router.post(
-  "/",
-  authentication,
-  validation(createNotificationSchema),
-  createNotification
-);
+router.get("/", getUserNotifications);
+router.patch("/:id/read", markAsRead);
 
-router.get(
-  "/",
-  authentication,
-  getNotifications
-);
-
-router.patch(
-  "/:id/read",
-  authentication,
-  markAsRead
-);
-
-router.delete(
-  "/:id",
-  authentication,
-  deleteNotification
-);
+// Admin-Only Routes
+router.post("/admin", createAdminNotification);
+router.delete("/admin/:id", deleteNotification);
 
 export default router;

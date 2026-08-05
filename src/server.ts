@@ -1,22 +1,8 @@
-import dotenv from "dotenv";
-dotenv.config();
-console.log(process.env.DB_URL);
-import app from "./app.js";
-import connectDB from "./config/db.js";
+import express from "express";
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./config/swagger.js"; // استخدام .js أو بدون امتداد
 
+const app = express();
 
-const PORT = process.env.PORT || 3000;
-
-const startServer = async () => {
-  console.log("1- Before DB");
-
-  await connectDB();
-
-  console.log("2- After DB");
-
-  app.listen(PORT, () => {
-    console.log(`🚀 Server Running On Port ${PORT}`);
-  });
-};
-
-startServer();
+// استخدام swagger بعد تعريف app
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));

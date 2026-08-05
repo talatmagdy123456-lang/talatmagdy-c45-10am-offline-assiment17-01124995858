@@ -1,120 +1,63 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { AuthRequest } from "../../middleware/auth.middleware.js";
+import { PostModel } from "../post/post.model.js";
 
-import {
-  createCommentService,
-  getCommentsService,
-  updateCommentService,
-  deleteCommentService,
-} from "./comment.service.js";
-
-// ================= Create =================
-
-export const createComment = async (
-  req: AuthRequest,
-  res: Response
-) => {
+export const addComment = async (req: AuthRequest, res: Response) => {
   try {
-    const postId = req.params.postId as string;
+    const { postId } = req.params;
+    const { content } = req.body;
 
-    if (!postId) {
-      return res.status(400).json({
-        message: "Post id is required",
-      });
-    }
+    const post = await PostModel.findById(postId);
+    if (!post) return res.status(404).json({ success: false, message: "Post not found" });
 
-    const comment = await createCommentService(
-      req.body,
-      req.user._id.toString(),
-      postId
-    );
-
-    return res.status(201).json(comment);
-  } catch (error) {
-    return res.status(400).json({
-      message: error instanceof Error ? error.message : "Error",
+    post.comments.push({
+      user: req.user._id,
+      content,
+      createdAt: new Date()
     });
+    post.commentsCount = post.comments.length;
+
+    await post.save();
+    return res.status(201).json({ success: true, comments: post.comments });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// ================= Get =================
-
-export const getComments = async (
-  req: Request,
-  res: Response
-) => {
+export const addReply = async (req: AuthRequest, res: Response) => {
   try {
-    const postId = req.params.postId as string;
+    const { postId } = req.params;
+    const { content } = req.body;
 
-    if (!postId) {
-      return res.status(400).json({
-        message: "Post id is required",
-      });
-    }
+    const post = await PostModel.findById(postId);
+    if (!post) return res.status(404).json({ success: false, message: "Post not found" });
 
-    const comments = await getCommentsService(postId);
-
-    return res.json(comments);
-  } catch (error) {
-    return res.status(400).json({
-      message: error instanceof Error ? error.message : "Error",
+    post.comments.push({
+      user: req.user._id,
+      content,
+      createdAt: new Date()
     });
+
+    await post.save();
+    return res.status(201).json({ success: true, comments: post.comments });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// ================= Update =================
-
-export const updateComment = async (
-  req: AuthRequest,
-  res: Response
-) => {
+export const deleteComment = async (req: AuthRequest, res: Response) => {
   try {
-    const id = req.params.id as string;
+    const { postId, commentId } = req.params;
 
-    if (!id) {
-      return res.status(400).json({
-        message: "Comment id is required",
-      });
-    }
+    const post = await PostModel.findById(postId);
+    if (!post) return res.status(404).json({ success: false, message: "Post not found" });
 
-    const comment = await updateCommentService(
-      id,
-      req.user._id.toString(),
-      req.body
-    );
+    post.comments = post.comments.filter((c: any) => c._id.toString() !== commentId);
+    post.commentsCount = post.comments.length;
 
-    return res.json(comment);
-  } catch (error) {
-    return res.status(400).json({
-      message: error instanceof Error ? error.message : "Error",
-    });
-  }
-};
-
-// ================= Delete =================
-
-export const deleteComment = async (
-  req: AuthRequest,
-  res: Response
-) => {
-  try {
-    const id = req.params.id as string;
-
-    if (!id) {
-      return res.status(400).json({
-        message: "Comment id is required",
-      });
-    }
-
-    const result = await deleteCommentService(
-      id,
-      req.user._id.toString()
-    );
-
-    return res.json(result);
-  } catch (error) {
-    return res.status(400).json({
-      message: error instanceof Error ? error.message : "Error",
-    });
+    await post.save();
+    return res.status(200).json({ success: true, message: "Comment deleted", comments: post.comments });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
   }
 };

@@ -1,16 +1,10 @@
 import { Router } from "express";
-import { createComment, getComments, updateComment, deleteComment, } from "./comment.controller.js";
+import { addComment, addReply } from "./comment.controller.js";
 import { authentication } from "../../middleware/auth.middleware.js";
-import validation from "../../middleware/validation.middleware.js";
-import { createCommentSchema, updateCommentSchema, } from "./comment.validation.js";
 const router = Router();
-// Create Comment
-router.post("/:postId", authentication, validation(createCommentSchema), createComment);
-// Get Comments
-router.get("/:postId", authentication, getComments);
-// Update Comment
-router.put("/:id", authentication, validation(updateCommentSchema), updateComment);
-// Delete Comment
-router.delete("/:id", authentication, deleteComment);
+// إضافة تعليق رئيسي
+router.post("/", authentication, addComment);
+// الرد على تعليق معُين
+router.post("/:commentId/reply", authentication, addReply);
 export default router;
 //# sourceMappingURL=comment.routes.js.map

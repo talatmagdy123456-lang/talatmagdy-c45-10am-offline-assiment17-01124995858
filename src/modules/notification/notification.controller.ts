@@ -1,109 +1,62 @@
 import { Response } from "express";
 import { AuthRequest } from "../../middleware/auth.middleware.js";
+import { NotificationModel } from "./notification.model.js";
 
-import {
-  createNotificationService,
-  getNotificationsService,
-  markAsReadService,
-  deleteNotificationService,
-} from "./notification.service.js";
-
-export const createNotification = async (
-  req: AuthRequest,
-  res: Response
-) => {
+// Admin Only: Create & Push Notification
+export const createAdminNotification = async (req: AuthRequest, res: Response) => {
   try {
-    const notification =
-      await createNotificationService(req.body);
-
-    res.status(201).json(notification);
-  } catch (error) {
-    res.status(400).json({
-      message:
-        error instanceof Error
-          ? error.message
-          : "Error",
+    const { title, body, recipientId } = req.body;
+    const notification = await NotificationModel.create({
+      title,
+      body,
+      recipient: recipientId || null,
+      createdByAdmin: true
     });
+
+    // FCM Send Integration placeholder
+    // await firebaseAdmin.messaging().sendToDevice(...)
+
+    return res.status(201).json({ success: true, notification });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
   }
 };
 
-export const getNotifications = async (
-  req: AuthRequest,
-  res: Response
-) => {
+// Get User Notifications
+export const getUserNotifications = async (req: AuthRequest, res: Response) => {
   try {
-    const notifications =
-      await getNotificationsService(
-        req.user._id.toString()
-      );
+    const notifications = await NotificationModel.find({
+      $or: [{ recipient: req.user._id }, { recipient: null }]
+    }).sort({ createdAt: -1 });
 
-    res.json(notifications);
-  } catch (error) {
-    res.status(400).json({
-      message:
-        error instanceof Error
-          ? error.message
-          : "Error",
-    });
+    return res.status(200).json({ success: true, notifications });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
   }
 };
 
-export const markAsRead = async (
-  req: AuthRequest,
-  res: Response
-) => {
+// Mark as Read
+export const markAsRead = async (req: AuthRequest, res: Response) => {
   try {
-    const id = req.params.id as string;
-
-    if (!id) {
-      return res.status(400).json({
-        message: "Notification ID is required",
-      });
-    }
-
-    const notification =
-      await markAsReadService(
-        id,
-        req.user._id.toString()
-      );
-
-    res.json(notification);
-  } catch (error) {
-    res.status(400).json({
-      message:
-        error instanceof Error
-          ? error.message
-          : "Error",
-    });
+    const { id } = req.params;
+    const notification = await NotificationModel.findByIdAndUpdate(
+      id,
+      { isRead: true },
+      { new: true }
+    );
+    return res.status(200).json({ success: true, notification });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
   }
 };
 
-export const deleteNotification = async (
-  req: AuthRequest,
-  res: Response
-) => {
+// Delete Notification (Admin)
+export const deleteNotification = async (req: AuthRequest, res: Response) => {
   try {
-    const id = req.params.id as string;
-
-    if (!id) {
-      return res.status(400).json({
-        message: "Notification ID is required",
-      });
-    }
-
-    const result =
-      await deleteNotificationService(
-        id,
-        req.user._id.toString()
-      );
-
-    res.json(result);
-  } catch (error) {
-    res.status(400).json({
-      message:
-        error instanceof Error
-          ? error.message
-          : "Error",
-    });
+    const { id } = req.params;
+    await NotificationModel.findByIdAndDelete(id);
+    return res.status(200).json({ success: true, message: "Notification deleted" });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
   }
 };

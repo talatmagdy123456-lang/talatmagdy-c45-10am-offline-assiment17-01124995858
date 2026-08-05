@@ -1,0 +1,1 @@
+{"version":3,"file":"socket.middleware.d.ts","sourceRoot":"","sources":["../../src/gateways/socket.middleware.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,MAAM,EAAE,MAAM,WAAW,CAAC;AAGnC,MAAM,WAAW,mBAAoB,SAAQ,MAAM;IACjD,IAAI,CAAC,EAAE,GAAG,CAAC;CACZ;AAED,eAAO,MAAM,oBAAoB,GAAI,QAAQ,mBAAmB,EAAE,MAAM,CAAC,GAAG,CAAC,EAAE,KAAK,KAAK,IAAI,SAa5F,CAAC"}

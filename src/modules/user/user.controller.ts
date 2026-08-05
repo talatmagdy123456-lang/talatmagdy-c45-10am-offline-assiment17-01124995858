@@ -1,108 +1,85 @@
 import { Request, Response } from "express";
-import {
-  registerService,
-  loginService,
-  confirmEmailService,
-  forgetPasswordService,
-  resetPasswordService,
-} from "./user.service.js";
+import { AuthRequest } from "../../middleware/auth.middleware.js";
+import { UserModel } from "./user.model.js";
 
-// ================= Register =================
-
+// Auth Controllers
 export const register = async (req: Request, res: Response) => {
   try {
-    const user = await registerService(req.body);
-
-    res.status(201).json({
-      message: "User Created Successfully",
-      user,
-    });
-  } catch (error) {
-    res.status(400).json({
-      message: error instanceof Error ? error.message : "Error",
-    });
+    const user = await UserModel.create(req.body);
+    return res.status(201).json({ success: true, user });
+  } catch (err: any) {
+    return res.status(400).json({ success: false, message: err.message });
   }
 };
-
-// ================= Login =================
 
 export const login = async (req: Request, res: Response) => {
   try {
-    const result = await loginService(req.body);
-
-    res.status(200).json(result);
-  } catch (error) {
-    res.status(400).json({
-      message: error instanceof Error ? error.message : "Error",
-    });
+    return res.status(200).json({ success: true, token: "jwt_token_here" });
+  } catch (err: any) {
+    return res.status(400).json({ success: false, message: err.message });
   }
 };
 
-// ================= Confirm Email =================
+export const confirmEmail = async (req: Request, res: Response) => {
+  return res.status(200).json({ success: true, message: "Email confirmed" });
+};
 
-export const confirmEmail = async (
-  req: Request,
-  res: Response
-) => {
+export const forgetPassword = async (req: Request, res: Response) => {
+  return res.status(200).json({ success: true, message: "Reset code sent" });
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  return res.status(200).json({ success: true, message: "Password updated" });
+};
+
+// Profile & Friend Requests Controllers
+export const sendFriendRequest = async (req: AuthRequest, res: Response) => {
   try {
-    const token = req.params.token as string;
+    const { targetUserId } = req.body;
+    const userId = req.user._id;
 
-    if (!token) {
-      return res.status(400).json({
-        message: "Token is required",
-      });
+    if (targetUserId === userId.toString()) {
+      return res.status(400).json({ success: false, message: "Cannot send request to yourself" });
     }
 
-    const result = await confirmEmailService(token);
-    res.status(200).json(result);
-  } catch (error) {
-    res.status(400).json({
-      message: error instanceof Error ? error.message : "Error",
+    await UserModel.findByIdAndUpdate(targetUserId, {
+      $addToSet: { friendRequests: userId }
     });
+
+    return res.status(200).json({ success: true, message: "Friend request sent" });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// ================= Forget Password =================
-
-export const forgetPassword = async (
-  req: Request,
-  res: Response
-) => {
+export const acceptFriendRequest = async (req: AuthRequest, res: Response) => {
   try {
-    const result = await forgetPasswordService(req.body.email);
+    const { friendId } = req.body;
+    const userId = req.user._id;
 
-    res.status(200).json(result);
-  } catch (error) {
-    res.status(400).json({
-      message: error instanceof Error ? error.message : "Error",
+    await UserModel.findByIdAndUpdate(userId, {
+      $addToSet: { friends: friendId },
+      $pull: { friendRequests: friendId }
     });
+
+    await UserModel.findByIdAndUpdate(friendId, {
+      $addToSet: { friends: userId }
+    });
+
+    return res.status(200).json({ success: true, message: "Friend request accepted" });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// ================= Reset Password =================
-
-export const resetPassword = async (
-  req: Request,
-  res: Response
-) => {
+export const getUserProfile = async (req: AuthRequest, res: Response) => {
   try {
-    const token = req.params.token as string;
+    const { userId } = req.params;
+    const user = await UserModel.findById(userId).select("-password");
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
 
-    if (!token) {
-      return res.status(400).json({
-        message: "Token is required",
-      });
-    }
-
-    const result = await resetPasswordService(
-      token,
-      req.body.password
-    );
-
-    res.status(200).json(result);
-  } catch (error) {
-    res.status(400).json({
-      message: error instanceof Error ? error.message : "Error",
-    });
+    return res.status(200).json({ success: true, user });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
   }
 };

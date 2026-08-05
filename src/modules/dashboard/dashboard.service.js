@@ -1,6 +1,6 @@
 import User from "../user/user.model.js";
-import Post from "../post/post.model.js";
-import Comment from "../comment/comment.model.js";
+import { Post } from "../post/post.model.js";
+import { Comment } from "../comment/comment.model.js";
 // Dashboard Statistics
 export const getDashboardStats = async () => {
     const usersCount = await User.countDocuments();

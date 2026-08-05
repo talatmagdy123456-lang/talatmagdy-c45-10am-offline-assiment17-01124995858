@@ -1,82 +1,33 @@
 import { Schema, model } from "mongoose";
+export var ReactionType;
+(function (ReactionType) {
+    ReactionType["LIKE"] = "LIKE";
+    ReactionType["LOVE"] = "LOVE";
+    ReactionType["HAHA"] = "HAHA";
+    ReactionType["WOW"] = "WOW";
+    ReactionType["SAD"] = "SAD";
+    ReactionType["ANGRY"] = "ANGRY";
+})(ReactionType || (ReactionType = {}));
 const postSchema = new Schema({
-    content: {
-        type: String,
-        required: true,
-        trim: true,
-    },
-    image: {
-        type: String,
-        default: "",
-    },
-    createdBy: {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-    },
+    content: { type: String, required: false },
+    image: { type: String, required: false },
+    author: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    likes: [{ type: Schema.Types.ObjectId, ref: "User" }],
     reactions: [
         {
-            user: {
-                type: Schema.Types.ObjectId,
-                ref: "User",
-                required: true,
-            },
-            emoji: {
-                type: String,
-                enum: [
-                    "like",
-                    "love",
-                    "haha",
-                    "wow",
-                    "sad",
-                    "angry",
-                ],
-                default: "like",
-            },
-        },
+            user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+            type: { type: String, enum: Object.values(ReactionType), required: true }
+        }
     ],
-}, {
-    timestamps: true,
-});
-// ================= Document Middleware =================
-postSchema.pre("validate", function () {
-    console.log("Before Validate Post");
-});
-postSchema.post("validate", function () {
-    console.log("After Validate Post");
-});
-postSchema.pre("save", function () {
-    console.log("Before Save Post");
-});
-postSchema.post("save", function () {
-    console.log("After Save Post");
-});
-// ================= Query Middleware =================
-postSchema.pre("find", function () {
-    this.populate("createdBy", "userName email");
-});
-postSchema.pre("findOne", function () {
-    this.populate("createdBy", "userName email");
-});
-postSchema.pre("findOneAndUpdate", function () {
-    console.log("Before Update Post");
-});
-postSchema.post("findOneAndUpdate", function () {
-    console.log("After Update Post");
-});
-postSchema.pre("findOneAndDelete", function () {
-    console.log("Before Delete Post");
-});
-postSchema.post("findOneAndDelete", function () {
-    console.log("After Delete Post");
-});
-// ================= Model Middleware =================
-postSchema.pre("insertMany", function () {
-    console.log("Before Insert Many");
-});
-postSchema.post("insertMany", function () {
-    console.log("After Insert Many");
-});
-const Post = model("Post", postSchema);
-export default Post;
+    comments: [
+        {
+            user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+            content: { type: String, required: true },
+            createdAt: { type: Date, default: Date.now }
+        }
+    ],
+    commentsCount: { type: Number, default: 0 }
+}, { timestamps: true });
+export const PostModel = model("Post", postSchema);
+export default PostModel;
 //# sourceMappingURL=post.model.js.map

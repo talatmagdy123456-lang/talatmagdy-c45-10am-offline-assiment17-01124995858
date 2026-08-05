@@ -1,111 +1,15 @@
-import User from "../user/user.model.js";
-import Post from "../post/post.model.js";
-import Comment from "../comment/comment.model.js";
+import { PostModel } from "../post/post.model.js";
 
-
-// Dashboard Statistics
-export const getDashboardStats = async () => {
-
-  const usersCount = await User.countDocuments();
-
-  const postsCount = await Post.countDocuments();
-
-  const commentsCount = await Comment.countDocuments();
-
-
-  const recentUsers = await User.find()
-    .sort({ createdAt: -1 })
-    .limit(5)
-    .select("userName email createdAt");
-
-
-  const recentPosts = await Post.find()
-    .sort({ createdAt: -1 })
-    .limit(5)
-    .populate(
-      "user",
-      "userName profileImage"
-    );
-
-
-  return {
-    usersCount,
-    postsCount,
-    commentsCount,
-    recentUsers,
-    recentPosts
-  };
-
-};
-
-
-
-// News Feed
 export const getNewsFeed = async () => {
-
-  const posts = await Post.find()
-
-    .sort({
-      createdAt:-1
-    })
-
-    .populate(
-      "user",
-      "userName profileImage"
-    )
-
-    .populate({
-      path:"comments",
-      populate:{
-        path:"user",
-        select:"userName profileImage"
-      }
-    })
-
-    .limit(20);
-
-
-
-  return posts;
-
+  return await PostModel.find().sort({ createdAt: -1 });
 };
 
+export const getUserPosts = async (userId: string) => {
+  return await PostModel.find({ author: userId });
+};
 
-
-
-// Profile Posts
-export const getUserPosts = async (
-  userId:string
-)=>{
-
-
-  const posts = await Post.find({
-
-    user:userId
-
-  })
-
-  .sort({
-    createdAt:-1
-  })
-
-
-  .populate(
-    "user",
-    "userName profileImage"
-  )
-
-
-  .populate({
-    path:"comments",
-    populate:{
-      path:"user",
-      select:"userName profileImage"
-    }
-  });
-
-
-
-  return posts;
-
+export const getDashboardStats = async () => {
+  const postsCount = await PostModel.countDocuments();
+  const recentPosts = await PostModel.find().limit(5).sort({ createdAt: -1 });
+  return { postsCount, recentPosts };
 };

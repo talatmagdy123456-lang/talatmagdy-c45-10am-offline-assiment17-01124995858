@@ -25,7 +25,7 @@ export const registerService = async (data: any) => {
     ...data,
     password: hashPassword,
     provider: "system",
-    confirmEmail: false,
+    isConfirmed: false,
   });
 
   const token = jwt.sign(
@@ -69,7 +69,7 @@ export const loginService = async (data: any) => {
     throw new Error("Invalid Password");
   }
 
-  if (!user.confirmEmail) {
+  if (!user.isConfirmed) {
     throw new Error("Please Confirm Your Email");
   }
 
@@ -99,7 +99,7 @@ export const confirmEmailService = async (token: string) => {
   ) as jwt.JwtPayload;
 
   await User.findByIdAndUpdate(decoded.id, {
-    confirmEmail: true,
+    isConfirmed: true,
   });
 
   return {

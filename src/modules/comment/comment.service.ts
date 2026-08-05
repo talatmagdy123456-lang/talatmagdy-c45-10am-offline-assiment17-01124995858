@@ -1,62 +1,19 @@
-import Comment from "./comment.model.js";
+import { PostModel } from "../post/post.model.js";
 
-export const createCommentService = async (
-  data: any,
-  userId: string,
-  postId: string
-) => {
-  return await Comment.create({
-    content: data.content,
-    createdBy: userId,
-    postId,
-  });
+export const createCommentService = async (postId: string, userId: string, content: string) => {
+  const post = await PostModel.findById(postId);
+  if (!post) throw new Error("Post not found");
+
+  post.comments.push({ user: userId as any, content, createdAt: new Date() });
+  await post.save();
+  return post;
 };
 
-export const getCommentsService = async (
-  postId: string
-) => {
-  return await Comment.find({ postId }).sort({
-    createdAt: -1,
-  });
-};
+export const createReplyService = async (postId: string, commentId: string, userId: string, content: string) => {
+  const post = await PostModel.findById(postId);
+  if (!post) throw new Error("Post not found");
 
-export const updateCommentService = async (
-  id: string,
-  userId: string,
-  data: any
-) => {
-  const comment = await Comment.findOneAndUpdate(
-    {
-      _id: id,
-      createdBy: userId,
-    },
-    data,
-    {
-      new: true,
-    }
-  );
-
-  if (!comment) {
-    throw new Error("Comment Not Found");
-  }
-
-  return comment;
-};
-
-export const deleteCommentService = async (
-  id: string,
-  userId: string
-) => {
-  const comment = await Comment.findOneAndDelete({
-    _id: id,
-    createdBy: userId,
-  });
-
-  if (!comment) {
-    throw new Error("Comment Not Found");
-  }
-
-  return {
-    message: "Comment Deleted Successfully",
-  };
+  post.comments.push({ user: userId as any, content, createdAt: new Date() });
+  await post.save();
+  return post;
 };

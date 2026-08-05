@@ -16,7 +16,7 @@ export const registerService = async (data) => {
         ...data,
         password: hashPassword,
         provider: "system",
-        confirmEmail: false,
+        isConfirmed: false,
     });
     const token = jwt.sign({
         id: user._id,
@@ -40,7 +40,7 @@ export const loginService = async (data) => {
     if (!match) {
         throw new Error("Invalid Password");
     }
-    if (!user.confirmEmail) {
+    if (!user.isConfirmed) {
         throw new Error("Please Confirm Your Email");
     }
     const accessToken = generateAccessToken({
@@ -61,7 +61,7 @@ export const loginService = async (data) => {
 export const confirmEmailService = async (token) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     await User.findByIdAndUpdate(decoded.id, {
-        confirmEmail: true,
+        isConfirmed: true,
     });
     return {
         message: "Email Confirmed Successfully",

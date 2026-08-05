@@ -1,20 +1,38 @@
-import { Types } from "mongoose";
+import { Document, Types } from "mongoose";
+export declare enum ReactionType {
+    LIKE = "LIKE",
+    LOVE = "LOVE",
+    HAHA = "HAHA",
+    WOW = "WOW",
+    SAD = "SAD",
+    ANGRY = "ANGRY"
+}
 export interface IReaction {
     user: Types.ObjectId;
-    emoji: "like" | "love" | "haha" | "wow" | "sad" | "angry";
+    type: ReactionType;
 }
-export interface IPost {
+export interface ICommentItem {
+    user: Types.ObjectId;
     content: string;
-    image?: string;
-    createdBy: Types.ObjectId;
-    reactions: IReaction[];
+    createdAt?: Date;
 }
-declare const Post: import("mongoose").Model<IPost, {}, {}, {}, import("mongoose").Document<unknown, {}, IPost, {}, import("mongoose").DefaultSchemaOptions> & IPost & {
+export interface IPost extends Document {
+    content?: string;
+    image?: string;
+    author: Types.ObjectId;
+    likes: Types.ObjectId[];
+    reactions: IReaction[];
+    comments: ICommentItem[];
+    commentsCount: number;
+    createdAt: Date;
+    updatedAt: Date;
+}
+export declare const PostModel: import("mongoose").Model<IPost, {}, {}, {}, Document<unknown, {}, IPost, {}, import("mongoose").DefaultSchemaOptions> & IPost & Required<{
     _id: Types.ObjectId;
-} & {
+}> & {
     __v: number;
 } & {
     id: string;
 }, any, IPost>;
-export default Post;
+export default PostModel;
 //# sourceMappingURL=post.model.d.ts.map

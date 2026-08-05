@@ -1,111 +1,23 @@
-import Post from "./post.model.js";
+import { PostModel, IPost } from "./post.model.js";
+import { Types } from "mongoose";
 
-// ================= Create Post =================
-
-export const createPostService = async (
-  data: any,
-  userId: string
-) => {
-  const post = await Post.create({
-    ...data,
-    createdBy: userId,
-  });
-
-  return post;
+export const createPostService = async (data: Partial<IPost>) => {
+  return await PostModel.create(data);
 };
 
-// ================= Get All Posts =================
+export const toggleLikeService = async (postId: string, userId: string) => {
+  const post = await PostModel.findById(postId);
+  if (!post) throw new Error("Post not found");
 
-export const getAllPostsService = async () => {
-  return await Post.find().sort({
-    createdAt: -1,
-  });
-};
+  const userObjectId = new Types.ObjectId(userId);
+  const isLiked = post.likes.some((id: any) => id.equals(userObjectId));
 
-// ================= Get Single Post =================
-
-export const getPostService = async (id: string) => {
-  const post = await Post.findById(id);
-
-  if (!post) {
-    throw new Error("Post Not Found");
-  }
-
-  return post;
-};
-
-// ================= Update Post =================
-
-export const updatePostService = async (
-  id: string,
-  data: any,
-  userId: string
-) => {
-  const post = await Post.findOneAndUpdate(
-    {
-      _id: id,
-      createdBy: userId,
-    },
-    data,
-    {
-      new: true,
-    }
-  );
-
-  if (!post) {
-    throw new Error("Post Not Found");
-  }
-
-  return post;
-};
-
-// ================= Delete Post =================
-
-export const deletePostService = async (
-  id: string,
-  userId: string
-) => {
-  const post = await Post.findOneAndDelete({
-    _id: id,
-    createdBy: userId,
-  });
-
-  if (!post) {
-    throw new Error("Post Not Found");
-  }
-
-  return {
-    message: "Post Deleted Successfully",
-  };
-};
-
-// ================= React Post =================
-
-export const reactPostService = async (
-  postId: string,
-  userId: string,
-  emoji: "like" | "love" | "haha" | "wow" | "sad" | "angry"
-) => {
-  const post = await Post.findById(postId);
-
-  if (!post) {
-    throw new Error("Post Not Found");
-  }
-
-  const reactionIndex = post.reactions.findIndex(
-    (reaction) => reaction.user.toString() === userId
-  );
-
-  if (reactionIndex === -1) {
-    post.reactions.push({
-      user: userId as any,
-      emoji,
-    });
+  if (isLiked) {
+    post.likes = post.likes.filter((id: any) => !id.equals(userObjectId));
   } else {
-    post.reactions[reactionIndex]!.emoji = emoji;
+    post.likes.push(userObjectId as any);
   }
 
   await post.save();
-
   return post;
 };

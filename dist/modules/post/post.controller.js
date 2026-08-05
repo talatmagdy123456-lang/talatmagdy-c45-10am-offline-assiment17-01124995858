@@ -1,87 +1,83 @@
-import { createPostService, getAllPostsService, getPostService, updatePostService, deletePostService, reactPostService, } from "./post.service.js";
-// ================= Create =================
+import { PostModel } from "./post.model.js";
+// إنشاء بوست
 export const createPost = async (req, res) => {
     try {
-        const post = await createPostService(req.body, req.user._id.toString());
-        return res.status(201).json({
-            message: "Post Created Successfully",
-            post,
+        const { content, image } = req.body;
+        const post = await PostModel.create({
+            content,
+            image,
+            author: req.user._id
         });
+        return res.status(201).json({ success: true, post });
     }
-    catch (error) {
-        return res.status(400).json({
-            message: error instanceof Error ? error.message : "Error",
-        });
+    catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
     }
 };
-// ================= Get All =================
-export const getAllPosts = async (req, res) => {
+// إضافة أو تحديث أو حذف Emoji Reaction
+export const reactToPost = async (req, res) => {
     try {
-        const posts = await getAllPostsService();
-        return res.json(posts);
+        const { postId } = req.params;
+        const { type } = req.body;
+        const userId = req.user._id;
+        const post = await PostModel.findById(postId);
+        if (!post)
+            return res.status(404).json({ success: false, message: "Post not found" });
+        const existingIndex = post.reactions.findIndex((r) => r.user.toString() === userId.toString());
+        if (existingIndex > -1) {
+            if (post.reactions[existingIndex].type === type) {
+                // لو ضغط على نفس الريأكشن يشيله
+                post.reactions.splice(existingIndex, 1);
+            }
+            else {
+                // لو اختار ريأكشن تاني يتغير
+                post.reactions[existingIndex].type = type;
+            }
+        }
+        else {
+            // إضافته لأول مرة
+            post.reactions.push({ user: userId, type });
+        }
+        await post.save();
+        return res.status(200).json({ success: true, reactions: post.reactions });
     }
-    catch (error) {
-        return res.status(400).json({
-            message: error instanceof Error ? error.message : "Error",
-        });
+    catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
     }
 };
-// ================= Get One =================
-export const getPost = async (req, res) => {
+// NewsFeed + Profile Posts
+export const getNewsFeed = async (req, res) => {
     try {
-        const id = req.params.id;
-        const post = await getPostService(id);
-        return res.json(post);
+        const posts = await PostModel.find()
+            .populate("author", "name avatar")
+            .sort({ createdAt: -1 })
+            .limit(20);
+        return res.status(200).json({ success: true, posts });
     }
-    catch (error) {
-        return res.status(400).json({
-            message: error instanceof Error ? error.message : "Error",
-        });
+    catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
     }
 };
-// ================= Update =================
-export const updatePost = async (req, res) => {
+// أضف هذه الدالة داخل src/modules/post/post.controller.ts
+export const toggleLikePost = async (req, res) => {
     try {
-        const id = req.params.id;
-        const post = await updatePostService(id, req.body, req.user._id.toString());
-        return res.json({
-            message: "Post Updated Successfully",
-            post,
-        });
+        const { postId } = req.params;
+        const userId = req.user._id;
+        const post = await PostModel.findById(postId);
+        if (!post)
+            return res.status(404).json({ success: false, message: "Post not found" });
+        const isLiked = post.likes.some((id) => id.toString() === userId.toString());
+        if (isLiked) {
+            post.likes = post.likes.filter((id) => id.toString() !== userId.toString());
+        }
+        else {
+            post.likes.push(userId);
+        }
+        await post.save();
+        return res.status(200).json({ success: true, likes: post.likes });
     }
-    catch (error) {
-        return res.status(400).json({
-            message: error instanceof Error ? error.message : "Error",
-        });
-    }
-};
-// ================= Delete =================
-export const deletePost = async (req, res) => {
-    try {
-        const id = req.params.id;
-        const result = await deletePostService(id, req.user._id.toString());
-        return res.json(result);
-    }
-    catch (error) {
-        return res.status(400).json({
-            message: error instanceof Error ? error.message : "Error",
-        });
-    }
-};
-// ================= React =================
-export const reactPost = async (req, res) => {
-    try {
-        const id = req.params.id;
-        const post = await reactPostService(id, req.user._id.toString(), req.body.emoji);
-        return res.json({
-            message: "Reaction Updated Successfully",
-            post,
-        });
-    }
-    catch (error) {
-        return res.status(400).json({
-            message: error instanceof Error ? error.message : "Error",
-        });
+    catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
     }
 };
 //# sourceMappingURL=post.controller.js.map

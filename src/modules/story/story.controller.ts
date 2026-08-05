@@ -1,70 +1,47 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { AuthRequest } from "../../middleware/auth.middleware.js";
+import { StoryModel } from "./story.model.js";
 
-import {
-  createStoryService,
-  getStoriesService,
-  deleteStoryService,
-} from "./story.service.js";
-
-export const createStory = async (
-  req: AuthRequest,
-  res: Response
-) => {
+// إنشاء ستوري
+export const createStory = async (req: AuthRequest, res: Response) => {
   try {
-    const story = await createStoryService(
-      req.body,
-      req.user._id.toString()
-    );
-
-    res.status(201).json({
-      message: "Story Created Successfully",
-      story,
+    const { mediaUrl, mediaType } = req.body;
+    const story = await StoryModel.create({
+      user: req.user._id,
+      mediaUrl,
+      mediaType
     });
-  } catch (error) {
-    res.status(400).json({
-      message: error instanceof Error ? error.message : "Error",
-    });
+    return res.status(201).json({ success: true, story });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
   }
 };
 
-export const getStories = async (
-  req: Request,
-  res: Response
-) => {
+// جلب الستوريز النشطة (MongoDB TTL بيتولى حذف القديم من 24h)
+export const getActiveStories = async (req: AuthRequest, res: Response) => {
   try {
-    const stories = await getStoriesService();
-
-    res.json(stories);
-  } catch (error) {
-    res.status(400).json({
-      message: error instanceof Error ? error.message : "Error",
-    });
+    const stories = await StoryModel.find()
+      .populate("user", "name avatar")
+      .sort({ createdAt: -1 });
+    return res.status(200).json({ success: true, stories });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
   }
 };
 
-export const deleteStory = async (
-  req: AuthRequest,
-  res: Response
-) => {
+// مشاهدة ستوري
+export const viewStory = async (req: AuthRequest, res: Response) => {
   try {
-    const id = req.params.id as string;
+    const { storyId } = req.params;
+    const userId = req.user._id;
 
-    if (!id) {
-      return res.status(400).json({
-        message: "Story ID is required",
-      });
-    }
-
-    const result = await deleteStoryService(
-      id,
-      req.user._id.toString()
+    const story = await StoryModel.findByIdAndUpdate(
+      storyId,
+      { $addToSet: { viewers: userId } },
+      { new: true }
     );
-
-    res.json(result);
-  } catch (error) {
-    res.status(400).json({
-      message: error instanceof Error ? error.message : "Error",
-    });
+    return res.status(200).json({ success: true, story });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, message: err.message });
   }
 };

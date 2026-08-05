@@ -1,54 +1,25 @@
-import {
-  Schema,
-  model,
-  Types,
-  type CallbackWithoutResultAndOptionalError,
-} from "mongoose";
+import { Schema, model, Document, Types } from "mongoose";
 
-export interface IStory {
-  image: string;
-  caption?: string;
-  createdBy: Types.ObjectId;
-  expiresAt: Date;
+export interface IStory extends Document {
+  user: Types.ObjectId;
+  mediaUrl: string;
+  mediaType: "image" | "video";
+  viewers: Types.ObjectId[];
+  createdAt: Date;
 }
 
 const storySchema = new Schema<IStory>(
   {
-    image: {
-      type: String,
-      required: true,
-    },
-
-    caption: {
-      type: String,
-      default: "",
-    },
-
-    createdBy: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-
-    expiresAt: {
-      type: Date,
-      default: () => new Date(Date.now() + 24 * 60 * 60 * 1000),
-      expires: 0,
-    },
+    user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    mediaUrl: { type: String, required: true },
+    mediaType: { type: String, enum: ["image", "video"], default: "image" },
+    viewers: [{ type: Schema.Types.ObjectId, ref: "User" }]
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-storySchema.pre(
-  /^find/,
-  function (this: any, next: CallbackWithoutResultAndOptionalError) {
-    this.populate("createdBy", "userName email");
-    next();
-  }
-);
+// TTL Index: حذف الستوري تلقائياً بعد 24 ساعة من إنشائها
+storySchema.index({ createdAt: 1 }, { expireAfterSeconds: 86400 });
 
-const Story = model<IStory>("Story", storySchema);
-
-export default Story;
+export const StoryModel = model<IStory>("Story", storySchema);
+export default StoryModel;

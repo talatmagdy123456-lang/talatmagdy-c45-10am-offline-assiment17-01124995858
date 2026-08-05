@@ -1,15 +1,18 @@
-import { Types } from "mongoose";
-export interface IComment {
-    content: string;
-    createdBy: Types.ObjectId;
+import { Document, Types } from "mongoose";
+export interface IComment extends Document {
     postId: Types.ObjectId;
+    userId: Types.ObjectId;
+    text: string;
+    parentCommentId?: Types.ObjectId;
+    likes: Types.ObjectId[];
+    createdAt: Date;
+    updatedAt: Date;
 }
-declare const Comment: import("mongoose").Model<IComment, {}, {}, {}, import("mongoose").Document<unknown, {}, IComment, {}, import("mongoose").DefaultSchemaOptions> & IComment & {
+export declare const Comment: import("mongoose").Model<IComment, {}, {}, {}, Document<unknown, {}, IComment, {}, import("mongoose").DefaultSchemaOptions> & IComment & Required<{
     _id: Types.ObjectId;
-} & {
+}> & {
     __v: number;
 } & {
     id: string;
 }, any, IComment>;
-export default Comment;
 //# sourceMappingURL=comment.model.d.ts.map

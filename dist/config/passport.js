@@ -13,9 +13,9 @@ passport.use(new GoogleStrategy({
         });
         if (!user) {
             user = await User.create({
-                userName: profile.displayName,
+                name: profile.displayName,
                 email: profile.emails?.[0]?.value || "",
-                confirmEmail: true,
+                isConfirmed: true,
                 provider: "google",
                 role: "user",
             });

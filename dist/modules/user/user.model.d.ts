@@ -1,18 +1,18 @@
-export interface IUser {
-    userName: string;
+import { Schema, Document } from "mongoose";
+export interface IUser extends Document {
+    name: string;
     email: string;
     password?: string;
-    confirmEmail: boolean;
-    provider: "system" | "google";
-    role: "user" | "admin";
-    changeCredentialTime?: Date | null;
+    isConfirmed?: boolean;
+    friends: Schema.Types.ObjectId[];
+    friendRequests: Schema.Types.ObjectId[];
 }
-declare const User: import("mongoose").Model<IUser, {}, {}, {}, import("mongoose").Document<unknown, {}, IUser, {}, import("mongoose").DefaultSchemaOptions> & IUser & {
+export declare const UserModel: import("mongoose").Model<IUser, {}, {}, {}, Document<unknown, {}, IUser, {}, import("mongoose").DefaultSchemaOptions> & IUser & Required<{
     _id: import("mongoose").Types.ObjectId;
-} & {
+}> & {
     __v: number;
 } & {
     id: string;
 }, any, IUser>;
-export default User;
+export default UserModel;
 //# sourceMappingURL=user.model.d.ts.map

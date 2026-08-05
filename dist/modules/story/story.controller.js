@@ -1,44 +1,41 @@
-import { createStoryService, getStoriesService, deleteStoryService, } from "./story.service.js";
+import { StoryModel } from "./story.model.js";
+// إنشاء ستوري
 export const createStory = async (req, res) => {
     try {
-        const story = await createStoryService(req.body, req.user._id.toString());
-        res.status(201).json({
-            message: "Story Created Successfully",
-            story,
+        const { mediaUrl, mediaType } = req.body;
+        const story = await StoryModel.create({
+            user: req.user._id,
+            mediaUrl,
+            mediaType
         });
+        return res.status(201).json({ success: true, story });
     }
-    catch (error) {
-        res.status(400).json({
-            message: error instanceof Error ? error.message : "Error",
-        });
+    catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
     }
 };
-export const getStories = async (req, res) => {
+// جلب الستوريز النشطة (MongoDB TTL بيتولى حذف القديم من 24h)
+export const getActiveStories = async (req, res) => {
     try {
-        const stories = await getStoriesService();
-        res.json(stories);
+        const stories = await StoryModel.find()
+            .populate("user", "name avatar")
+            .sort({ createdAt: -1 });
+        return res.status(200).json({ success: true, stories });
     }
-    catch (error) {
-        res.status(400).json({
-            message: error instanceof Error ? error.message : "Error",
-        });
+    catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
     }
 };
-export const deleteStory = async (req, res) => {
+// مشاهدة ستوري
+export const viewStory = async (req, res) => {
     try {
-        const id = req.params.id;
-        if (!id) {
-            return res.status(400).json({
-                message: "Story ID is required",
-            });
-        }
-        const result = await deleteStoryService(id, req.user._id.toString());
-        res.json(result);
+        const { storyId } = req.params;
+        const userId = req.user._id;
+        const story = await StoryModel.findByIdAndUpdate(storyId, { $addToSet: { viewers: userId } }, { new: true });
+        return res.status(200).json({ success: true, story });
     }
-    catch (error) {
-        res.status(400).json({
-            message: error instanceof Error ? error.message : "Error",
-        });
+    catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
     }
 };
 //# sourceMappingURL=story.controller.js.map

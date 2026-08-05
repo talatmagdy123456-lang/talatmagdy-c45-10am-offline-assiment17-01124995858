@@ -26,12 +26,12 @@ passport.use(
 
         if (!user) {
           user = await User.create({
-            userName: profile.displayName,
+            name: profile.displayName,
             email: profile.emails?.[0]?.value || "",
-            confirmEmail: true,
+            isConfirmed: true,
             provider: "google",
             role: "user",
-          });
+          } as any);
         }
 
         const access = generateAccessToken({

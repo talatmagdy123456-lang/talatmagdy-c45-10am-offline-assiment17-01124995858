@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { createStory, getStories, deleteStory, } from "./story.controller.js";
-import { authentication } from "../../middleware/auth.middleware.js";
+import { authentication } from "../../middlewares/auth.middleware.js";
 import validation from "../../middleware/validation.middleware.js";
 import { createStorySchema, } from "./story.validation.js";
 const router = Router();

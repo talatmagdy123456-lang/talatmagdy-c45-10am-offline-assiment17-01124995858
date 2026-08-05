@@ -1,29 +1,11 @@
-import { Schema, model, } from "mongoose";
+import { Schema, model } from "mongoose";
 const notificationSchema = new Schema({
-    title: {
-        type: String,
-        required: true,
-    },
-    body: {
-        type: String,
-        required: true,
-    },
-    user: {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-    },
-    isRead: {
-        type: Boolean,
-        default: false,
-    },
-}, {
-    timestamps: true,
-});
-notificationSchema.pre(/^find/, function (next) {
-    this.populate("user", "userName email");
-    next();
-});
-const Notification = model("Notification", notificationSchema);
-export default Notification;
+    recipient: { type: Schema.Types.ObjectId, ref: "User", default: null },
+    title: { type: String, required: true },
+    body: { type: String, required: true },
+    isRead: { type: Boolean, default: false },
+    createdByAdmin: { type: Boolean, default: true }
+}, { timestamps: true });
+export const NotificationModel = model("Notification", notificationSchema);
+export default NotificationModel;
 //# sourceMappingURL=notification.model.js.map

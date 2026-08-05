@@ -1,6 +1,6 @@
-export declare const registerService: (data: any) => Promise<import("mongoose").Document<unknown, {}, import("./user.model.js").IUser, {}, import("mongoose").DefaultSchemaOptions> & import("./user.model.js").IUser & {
+export declare const registerService: (data: any) => Promise<import("mongoose").Document<unknown, {}, import("./user.model.js").IUser, {}, import("mongoose").DefaultSchemaOptions> & import("./user.model.js").IUser & Required<{
     _id: import("mongoose").Types.ObjectId;
-} & {
+}> & {
     __v: number;
 } & {
     id: string;

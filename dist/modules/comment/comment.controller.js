@@ -1,74 +1,56 @@
-import { createCommentService, getCommentsService, updateCommentService, deleteCommentService, } from "./comment.service.js";
-// ================= Create =================
-export const createComment = async (req, res) => {
+import { PostModel } from "../post/post.model.js";
+export const addComment = async (req, res) => {
     try {
-        const postId = req.params.postId;
-        if (!postId) {
-            return res.status(400).json({
-                message: "Post id is required",
-            });
-        }
-        const comment = await createCommentService(req.body, req.user._id.toString(), postId);
-        return res.status(201).json(comment);
-    }
-    catch (error) {
-        return res.status(400).json({
-            message: error instanceof Error ? error.message : "Error",
+        const { postId } = req.params;
+        const { content } = req.body;
+        const post = await PostModel.findById(postId);
+        if (!post)
+            return res.status(404).json({ success: false, message: "Post not found" });
+        post.comments.push({
+            user: req.user._id,
+            content,
+            createdAt: new Date()
         });
+        post.commentsCount = post.comments.length;
+        await post.save();
+        return res.status(201).json({ success: true, comments: post.comments });
+    }
+    catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
     }
 };
-// ================= Get =================
-export const getComments = async (req, res) => {
+export const addReply = async (req, res) => {
     try {
-        const postId = req.params.postId;
-        if (!postId) {
-            return res.status(400).json({
-                message: "Post id is required",
-            });
-        }
-        const comments = await getCommentsService(postId);
-        return res.json(comments);
-    }
-    catch (error) {
-        return res.status(400).json({
-            message: error instanceof Error ? error.message : "Error",
+        const { postId } = req.params;
+        const { content } = req.body;
+        const post = await PostModel.findById(postId);
+        if (!post)
+            return res.status(404).json({ success: false, message: "Post not found" });
+        post.comments.push({
+            user: req.user._id,
+            content,
+            createdAt: new Date()
         });
+        await post.save();
+        return res.status(201).json({ success: true, comments: post.comments });
+    }
+    catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
     }
 };
-// ================= Update =================
-export const updateComment = async (req, res) => {
-    try {
-        const id = req.params.id;
-        if (!id) {
-            return res.status(400).json({
-                message: "Comment id is required",
-            });
-        }
-        const comment = await updateCommentService(id, req.user._id.toString(), req.body);
-        return res.json(comment);
-    }
-    catch (error) {
-        return res.status(400).json({
-            message: error instanceof Error ? error.message : "Error",
-        });
-    }
-};
-// ================= Delete =================
 export const deleteComment = async (req, res) => {
     try {
-        const id = req.params.id;
-        if (!id) {
-            return res.status(400).json({
-                message: "Comment id is required",
-            });
-        }
-        const result = await deleteCommentService(id, req.user._id.toString());
-        return res.json(result);
+        const { postId, commentId } = req.params;
+        const post = await PostModel.findById(postId);
+        if (!post)
+            return res.status(404).json({ success: false, message: "Post not found" });
+        post.comments = post.comments.filter((c) => c._id.toString() !== commentId);
+        post.commentsCount = post.comments.length;
+        await post.save();
+        return res.status(200).json({ success: true, message: "Comment deleted", comments: post.comments });
     }
-    catch (error) {
-        return res.status(400).json({
-            message: error instanceof Error ? error.message : "Error",
-        });
+    catch (err) {
+        return res.status(500).json({ success: false, message: err.message });
     }
 };
 //# sourceMappingURL=comment.controller.js.map
